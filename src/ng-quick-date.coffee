@@ -205,6 +205,7 @@ app.directive "quickDatepicker", ['ngQuickDateDefaults', '$filter', '$sce', (ngQ
   require: "?ngModel"
   scope:
     dateFilter: '=?'
+    minDate: '=?'
     onChange: "&"
     required: '@'
 
@@ -222,6 +223,7 @@ app.directive "quickDatepicker", ['ngQuickDateDefaults', '$filter', '$sce', (ngQ
       if typeof(attrs.initValue) == 'string'
         ngModelCtrl.$setViewValue(attrs.initValue)
       setCalendarDate()
+      setMinDate()
       refreshView()
 
     # Copy various configuration options from the default configuration to scope
@@ -239,6 +241,28 @@ app.directive "quickDatepicker", ['ngQuickDateDefaults', '$filter', '$sce', (ngQ
           scope.labelFormat += " " + scope.timeFormat
       if attrs.iconClass && attrs.iconClass.length
         scope.buttonIconHtml = $sce.trustAsHtml("<i ng-show='iconClass' class='#{attrs.iconClass}'></i>")
+
+    # If minDate attr is set, override the dateFilter scope function to enforce it
+    setMinDate = ->
+      if attrs.minDate
+
+        # Watch for changes to minDate, and update the widget accordingly
+        scope.$watch 'minDate', (minDate) ->
+
+          if angular.isDate(minDate)
+            scope.dateFilter = (date) ->
+              minDate.setHours(0, 0, 0, 0);
+              date.setHours(0, 0, 0, 0);
+              date >= minDate;
+
+            # If date selected is before minDate, set it to minDate;
+            selectedDate = ngModelCtrl.$viewValue;
+
+            if angular.isDate(selectedDate) && !scope.dateFilter(selectedDate)
+              scope.selectDate(scope.minDate, true)
+
+            refreshView();
+        , true
 
     # VIEW SETUP
     # ================================
@@ -376,7 +400,7 @@ app.directive "quickDatepicker", ['ngQuickDateDefaults', '$filter', '$sce', (ngQ
 
     # DATA WATCHES
     # ==================================
-    
+
     # Called when the model is updated from outside the datepicker
     ngModelCtrl.$render = ->
       setCalendarDate(ngModelCtrl.$viewValue)

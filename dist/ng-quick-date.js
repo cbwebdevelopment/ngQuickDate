@@ -257,12 +257,13 @@
         require: "?ngModel",
         scope: {
           dateFilter: '=?',
+          minDate: '=?',
           onChange: "&",
           required: '@'
         },
         replace: true,
         link: function(scope, element, attrs, ngModelCtrl) {
-          var dateToString, datepickerClicked, datesAreEqual, datesAreEqualToMinute, getDaysInMonth, initialize, parseDateString, refreshView, setCalendarDate, setConfigOptions, setInputFieldValues, setupCalendarView, stringToDate;
+          var dateToString, datepickerClicked, datesAreEqual, datesAreEqualToMinute, getDaysInMonth, initialize, parseDateString, refreshView, setCalendarDate, setConfigOptions, setInputFieldValues, setMinDate, setupCalendarView, stringToDate;
           initialize = function() {
             setConfigOptions();
             scope.toggleCalendar(false);
@@ -274,6 +275,7 @@
               ngModelCtrl.$setViewValue(attrs.initValue);
             }
             setCalendarDate();
+            setMinDate();
             return refreshView();
           };
           setConfigOptions = function() {
@@ -296,6 +298,25 @@
             }
             if (attrs.iconClass && attrs.iconClass.length) {
               return scope.buttonIconHtml = $sce.trustAsHtml("<i ng-show='iconClass' class='" + attrs.iconClass + "'></i>");
+            }
+          };
+          setMinDate = function() {
+            if (attrs.minDate) {
+              return scope.$watch('minDate', function(minDate) {
+                var selectedDate;
+                if (angular.isDate(minDate)) {
+                  scope.dateFilter = function(date) {
+                    minDate.setHours(0, 0, 0, 0);
+                    date.setHours(0, 0, 0, 0);
+                    return date >= minDate;
+                  };
+                  selectedDate = ngModelCtrl.$viewValue;
+                  if (angular.isDate(selectedDate) && !scope.dateFilter(selectedDate)) {
+                    scope.selectDate(scope.minDate, true);
+                  }
+                  return refreshView();
+                }
+              }, true);
             }
           };
           datepickerClicked = false;
