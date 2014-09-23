@@ -183,7 +183,7 @@ app.provider "ngQuickDateDefaults", ->
           newdate.getTime()
 
         scope = this
-        seconds = getDateFromFormat(str, scope.labelFormat) || Date.parse(str)
+        seconds = getDateFromFormat(str, scope.dateFormat) || Date.parse(str)
         if isNaN(seconds)
           return null
         else
